@@ -123,6 +123,7 @@ public class Main implements Callable<Integer> {
 
             // Create the algorithm
             // NOTE:  Replace this with your own ALGORITHM CONSTRUCTOR !!!!!
+            //DOMINANCE COMPARATOR COMO COJONES SE USA AQUI????????????????????????????????
             MOCell<BinarySolution> algorithm = new MOCellBuilder<BinarySolution>(problem, (CrossoverOperator) crossover, mutation)
                     .setSelectionOperator(selection)
                     .setMaxEvaluations(25000)
