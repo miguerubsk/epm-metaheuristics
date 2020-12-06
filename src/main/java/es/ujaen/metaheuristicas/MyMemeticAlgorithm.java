@@ -17,13 +17,16 @@
 package es.ujaen.metaheuristicas;
 
 import java.util.List;
+import org.uma.jmetal.algorithm.multiobjective.mocell.MOCell;
 import org.uma.jmetal.algorithm.multiobjective.nsgaii.NSGAII;
 import org.uma.jmetal.operator.CrossoverOperator;
 import org.uma.jmetal.operator.MutationOperator;
 import org.uma.jmetal.operator.SelectionOperator;
 import org.uma.jmetal.problem.Problem;
 import org.uma.jmetal.solution.BinarySolution;
+import org.uma.jmetal.util.archive.BoundedArchive;
 import org.uma.jmetal.util.evaluator.SolutionListEvaluator;
+import org.uma.jmetal.util.neighborhood.Neighborhood;
 
 /**
  *
@@ -40,16 +43,21 @@ import org.uma.jmetal.util.evaluator.SolutionListEvaluator;
  * 
  * @author agvico
  */
-public class MyMemeticAlgorithm extends NSGAII<BinarySolution>{
+public class MyMemeticAlgorithm extends MOCell<BinarySolution>{
     
-    public MyMemeticAlgorithm(Problem<BinarySolution> problem, int maxEvaluations, int populationSize, int matingPoolSize, int offspringPopulationSize, CrossoverOperator<BinarySolution> crossoverOperator, MutationOperator<BinarySolution> mutationOperator, SelectionOperator<List<BinarySolution>, BinarySolution> selectionOperator, SolutionListEvaluator<BinarySolution> evaluator) {
-        super(problem, maxEvaluations, populationSize, matingPoolSize, offspringPopulationSize, crossoverOperator, mutationOperator, selectionOperator, evaluator);
+    public MyMemeticAlgorithm(Problem<BinarySolution> problem, int maxEvaluations, 
+            int populationSize, BoundedArchive<BinarySolution> archive, 
+            Neighborhood<BinarySolution> neighborhood, CrossoverOperator<BinarySolution> crossoverOperator, 
+            MutationOperator<BinarySolution> mutationOperator, SelectionOperator<List<BinarySolution>, BinarySolution> selectionOperator, 
+            SolutionListEvaluator<BinarySolution> evaluator) {
+        super(problem, maxEvaluations, populationSize, archive, neighborhood, crossoverOperator, mutationOperator, selectionOperator, evaluator);
     }
 
     @Override
     protected List<BinarySolution> replacement(List<BinarySolution> population, List<BinarySolution> offspringPopulation) {
         
         // AQUI DEBEMOS JUGAR CON offspringPopulation aplicando la BL.
+        //BUSQUEDA TABU
         
         
         // Finalmente, debemos llamar SIEMPRE a super() para realizar el proceso de reemplazo original
