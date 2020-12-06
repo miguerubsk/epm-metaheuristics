@@ -58,6 +58,8 @@ public class MyMemeticAlgorithm extends MOCell<BinarySolution>{
         
         // AQUI DEBEMOS JUGAR CON offspringPopulation aplicando la BL.
         //BUSQUEDA TABU
+        BusquedaTabu bt = new BusquedaTabu((Problema)problem);
+        bt.doBusquedaTabu(offspringPopulation);
         
         
         // Finalmente, debemos llamar SIEMPRE a super() para realizar el proceso de reemplazo original

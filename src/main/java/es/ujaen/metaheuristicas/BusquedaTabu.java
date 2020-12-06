@@ -55,7 +55,7 @@ public class BusquedaTabu {
      * @param evaluator             The patterns' evaluator
      * @return     A new set of LLs with new fuzzy definitions.
      */
-    public List<List<FuzzySet>> doBusquedaTabu(List<List<FuzzySet>> initialSolution, List<BinarySolution> currentPopulation, EvaluatorIndDNF evaluator) {
+    public List<List<FuzzySet>> doBusquedaTabu(List<List<FuzzySet>> initialSolution) {
         
                 
         /**
