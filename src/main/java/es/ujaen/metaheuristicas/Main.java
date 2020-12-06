@@ -33,6 +33,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.uma.jmetal.algorithm.Algorithm;
+import org.uma.jmetal.algorithm.multiobjective.mocell.MOCell;
+import org.uma.jmetal.algorithm.multiobjective.mocell.MOCellBuilder;
 import org.uma.jmetal.algorithm.multiobjective.nsgaii.NSGAII;
 import org.uma.jmetal.algorithm.multiobjective.nsgaii.NSGAIIBuilder;
 import org.uma.jmetal.operator.CrossoverOperator;
@@ -131,11 +133,10 @@ public class Main implements Callable<Integer> {
 
             // Create the algorithm
             // NOTE:  Replace this with your own ALGORITHM CONSTRUCTOR !!!!!
-            NSGAII<BinarySolution> algorithm = new NSGAIIBuilder<BinarySolution>(problem, (CrossoverOperator) crossover, mutation, populationSize)
+            MOCell<BinarySolution> algorithm = new MOCellBuilder<BinarySolution>(problem, (CrossoverOperator) crossover, mutation)
                     .setSelectionOperator(selection)
                     .setMaxEvaluations(25000)
-                    .setDominanceComparator(dominanceComparator.reversed())
-                    .build();
+                    .build();            
 
             // Execute the algorithm
             AlgorithmRunner algorithmRunner = new AlgorithmRunner.Executor(algorithm).execute();
