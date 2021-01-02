@@ -24,12 +24,11 @@ import es.ujaen.metaheuristicas.qualitymeasures.SuppDiff;
 import es.ujaen.metaheuristicas.qualitymeasures.WRAccNorm;
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.uma.jmetal.algorithm.multiobjective.mocell.MOCell;
-import org.uma.jmetal.algorithm.multiobjective.mocell.MOCellBuilder;
 import org.uma.jmetal.operator.CrossoverOperator;
 import org.uma.jmetal.operator.MutationOperator;
 import org.uma.jmetal.operator.impl.selection.BinaryTournamentSelection;
@@ -38,8 +37,12 @@ import org.uma.jmetal.solution.BinarySolution;
 import org.uma.jmetal.util.AlgorithmRunner;
 import org.uma.jmetal.util.ProblemUtils;
 import org.uma.jmetal.util.SolutionListUtils;
+import org.uma.jmetal.util.archive.BoundedArchive;
+import org.uma.jmetal.util.archive.impl.CrowdingDistanceArchive;
 import org.uma.jmetal.util.comparator.DominanceComparator;
 import org.uma.jmetal.util.comparator.RankingAndCrowdingDistanceComparator;
+import org.uma.jmetal.util.evaluator.impl.SequentialSolutionListEvaluator;
+import org.uma.jmetal.util.neighborhood.impl.C9;
 import org.uma.jmetal.util.pseudorandom.JMetalRandom;
 import picocli.CommandLine;
 import picocli.CommandLine.Parameters;
@@ -122,12 +125,14 @@ public class Main implements Callable<Integer> {
             problem.setClass(clazz);
 
             // Create the algorithm
+            CrowdingDistanceArchive<BinarySolution> archive = new CrowdingDistanceArchive<>(0);
+            C9<BinarySolution> neighborhood = new C9<BinarySolution>(10,10);
+            SequentialSolutionListEvaluator<BinarySolution> evaluator = new SequentialSolutionListEvaluator<>();
             // NOTE:  Replace this with your own ALGORITHM CONSTRUCTOR !!!!!
-            //DOMINANCE COMPARATOR COMO COJONES SE USA AQUI????????????????????????????????
-            MOCell<BinarySolution> algorithm = new MOCellBuilder<BinarySolution>(problem, (CrossoverOperator) crossover, mutation)
-                    .setSelectionOperator(selection)
-                    .setMaxEvaluations(25000)
-                    .build();            
+            MyMemeticAlgorithm algorithm = new MyMemeticAlgorithm(problem, maxEvaluations, 
+                    populationSize, archive, neighborhood, (CrossoverOperator) crossover, 
+                    mutation, selection, evaluator);
+
 
             // Execute the algorithm
             AlgorithmRunner algorithmRunner = new AlgorithmRunner.Executor(algorithm).execute();

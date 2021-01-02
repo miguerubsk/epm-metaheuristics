@@ -30,43 +30,45 @@ import org.uma.jmetal.util.neighborhood.Neighborhood;
 
 /**
  *
- * CLASE DE EJEMPLO PARA LA CREACION DE UN ALGORITMO MEMETICO PARA EL PROBLEMA DE EPM
- * 
- * BASADO EN EL ALGORITMO GENETICO NSGA-II (Para otro algoritmo, simplemente cambiar la clase de la que se herede)
- * 
- * SI OS FIJAIS, AL HEREDAR DE NSGA-II TODA SU FUNCIONALIDAD PERMANECE INTACTA. PARA MODIFICARLO CON NUESTRO CÓDIGO
- * PARA FORMAR UN MEMÉTICO, DEBEMOS DE SOBRECARGAR EL METODO replacement() que es la función de reemplazo.
- * 
- * 
- * En nuestro caso debemos aplicar el algoritmo de BL en la población offspring y tras esto, llamar al método super()
- * para que no se pierda el proceso de reemplazo original.
- * 
+ * CLASE DE EJEMPLO PARA LA CREACION DE UN ALGORITMO MEMETICO PARA EL PROBLEMA
+ * DE EPM
+ *
+ * BASADO EN EL ALGORITMO GENETICO NSGA-II (Para otro algoritmo, simplemente
+ * cambiar la clase de la que se herede)
+ *
+ * SI OS FIJAIS, AL HEREDAR DE NSGA-II TODA SU FUNCIONALIDAD PERMANECE INTACTA.
+ * PARA MODIFICARLO CON NUESTRO CÓDIGO PARA FORMAR UN MEMÉTICO, DEBEMOS DE
+ * SOBRECARGAR EL METODO replacement() que es la función de reemplazo.
+ *
+ *
+ * En nuestro caso debemos aplicar el algoritmo de BL en la población offspring
+ * y tras esto, llamar al método super() para que no se pierda el proceso de
+ * reemplazo original.
+ *
  * @author agvico
  */
-public class MyMemeticAlgorithm extends MOCell<BinarySolution>{
-    
+public class MyMemeticAlgorithm extends MOCell<BinarySolution> {
+
     public MyMemeticAlgorithm(Problem<BinarySolution> problem, int maxEvaluations, 
-            int populationSize, BoundedArchive<BinarySolution> archive, 
-            Neighborhood<BinarySolution> neighborhood, CrossoverOperator<BinarySolution> crossoverOperator, 
-            MutationOperator<BinarySolution> mutationOperator, SelectionOperator<List<BinarySolution>, BinarySolution> selectionOperator, 
+            int populationSize, BoundedArchive<BinarySolution> archive, Neighborhood<BinarySolution> neighborhood, 
+            CrossoverOperator<BinarySolution> crossoverOperator, MutationOperator<BinarySolution> mutationOperator, 
+            SelectionOperator<List<BinarySolution>, BinarySolution> selectionOperator, 
             SolutionListEvaluator<BinarySolution> evaluator) {
+        
         super(problem, maxEvaluations, populationSize, archive, neighborhood, crossoverOperator, mutationOperator, selectionOperator, evaluator);
     }
 
+    
+
     @Override
     protected List<BinarySolution> replacement(List<BinarySolution> population, List<BinarySolution> offspringPopulation) {
-        
+
         // AQUI DEBEMOS JUGAR CON offspringPopulation aplicando la BL.
         //BUSQUEDA TABU
         BusquedaTabu bt = new BusquedaTabu((Problema)problem);
         bt.doBusquedaTabu(offspringPopulation);
-        
-        
         // Finalmente, debemos llamar SIEMPRE a super() para realizar el proceso de reemplazo original
         return super.replacement(population, offspringPopulation); //To change body of generated methods, choose Tools | Templates.
     }
-    
-    
-    
-    
+
 }

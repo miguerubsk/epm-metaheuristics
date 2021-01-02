@@ -374,6 +374,38 @@ public class Problema implements BinaryProblem {
 
         return min;
     }
+    
+    /**
+     * Get the maximum value of a numeric variable
+     *
+     * @param var
+     */
+    public double getMaxP(int var) {
+        double max = Double.NEGATIVE_INFINITY;
+        for (int i = 0; i < dataset.numInstances(); i++) {
+            if (dataset.get(i).value(var) > max) {
+                max = dataset.get(i).value(var);
+            }
+        }
+
+        return max;
+    }
+
+    /**
+     * Get the minimum value of a numeric variable
+     *
+     * @param var
+     */
+    public double getMinP(int var) {
+        double min = Double.POSITIVE_INFINITY;
+        for (int i = 0; i < dataset.numInstances(); i++) {
+            if (dataset.get(i).value(var) < min) {
+                min = dataset.get(i).value(var);
+            }
+        }
+
+        return min;
+    }
 
     /**
      * It generates the triangular liguistic labels for covering from min to max
@@ -425,6 +457,56 @@ public class Problema implements BinaryProblem {
         return sets;
     }
 
+    /**
+     * It generates the triangular liguistic labels for covering from min to max
+     * using the specified number of linguistic labels
+     *
+     * @param min
+     * @return
+     */
+    public List<FuzzySet> generateLinguistcLabels(double min, double max, int numLabels) {
+        double marca = (max - min) / ((double) (numLabels - 1));
+        double cutPoint = min + marca / 2;
+        ArrayList<FuzzySet> sets = new ArrayList<>();
+
+        for (int label = 0; label < numLabels; label++) {
+            ArrayList<Double> definitions = new ArrayList<>();
+            double value = min + marca * (label - 1);
+
+            // Creation of x0 point
+            if (label == 0) {
+                definitions.add(-1 * Double.MAX_VALUE);
+            } else {
+                definitions.add(Round(value, max));
+            }
+
+            // Creation of x1 point
+            value = min + marca * label;
+            definitions.add(Round(value, max));
+
+            // Creation of x2 point
+            value = min + marca * (label + 1);
+            if (label == numLabels - 1) {
+                definitions.add(Double.MAX_VALUE);
+            } else {
+                definitions.add(Round(value, max));
+            }
+
+            // Create de triangular fuzzy set
+            TriangularFuzzySet set = null;
+            try {
+                set = new TriangularFuzzySet(definitions, 1.0);
+            } catch (InvalidFuzzySetException ex) {
+                Logger.getLogger(Problema.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            sets.add(set);
+
+            cutPoint += marca;
+        }
+
+        return sets;
+    }
+    
     /**
      * <p>
      * Rounds the generated value for the semantics when necesary
