@@ -65,8 +65,15 @@ public class MyMemeticAlgorithm extends MOCell<BinarySolution> {
 
         // AQUI DEBEMOS JUGAR CON offspringPopulation aplicando la BL.
         //BUSQUEDA TABU
+//        Problema problemaaux = (Problema)problem;
+//        for (int i = 0; i < problemaaux.getFuzzySets().size(); i++) {
+//           System.out.println(problemaaux.getFuzzySets().get(i)); 
+//        }
+
+        Problema problemaAux = (Problema) problem;
+       
         BusquedaTabu bt = new BusquedaTabu((Problema)problem);
-        bt.doBusquedaTabu(offspringPopulation);
+        problemaAux.setFuzzySets(bt.doBusquedaTabu(offspringPopulation));
         // Finalmente, debemos llamar SIEMPRE a super() para realizar el proceso de reemplazo original
         return super.replacement(population, offspringPopulation); //To change body of generated methods, choose Tools | Templates.
     }

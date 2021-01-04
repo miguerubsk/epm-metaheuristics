@@ -22,9 +22,11 @@ import es.ujaen.metaheuristicas.fuzzy.FuzzySet;
 import es.ujaen.metaheuristicas.qualitymeasures.ContingencyTable;
 import es.ujaen.metaheuristicas.qualitymeasures.QualityMeasure;
 import es.ujaen.metaheuristicas.qualitymeasures.WRAccNorm;
+import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import org.apache.commons.collections4.list.AbstractLinkedList;
 import org.uma.jmetal.solution.BinarySolution;
 
 /**
@@ -63,11 +65,12 @@ public class BusquedaTabu {
          *
          */
         // Firstly, evaluate de initial population
-        // IMPORTANTE: CLONAR INITIAL SOLUTION PARA QUE NO OCURRAN COSAS EXTRAÑAS.
-        List<List<FuzzySet>> currentSolution = problem.getFuzzySets();
+        double initialQuality = evaluate(problem.getFuzzySets(), currentPopulation, (EvaluatorIndDNF) problem.getEvaluator(), new WRAccNorm());
+
+        //Creamos las variables necesarias para la ejecucion del algoritmo
         Integer evaluacion = 0;
         Integer contadorReinicializacion = 0;
-        Integer posicion;
+        Integer posicion = 0;
         double costeMejorSolucion;
         double costeSolucionActual;
         double costeSolucionParcial;
@@ -76,33 +79,36 @@ public class BusquedaTabu {
         List<List<FuzzySet>> solucionParcial = null;
         List<List<FuzzySet>> mejorSolucion = null;
         List<List<FuzzySet>> solucionActual = null;
-        List<List<FuzzySet>> solucion = null;
-        ConcurrentLinkedQueue<List<FuzzySet>> listaTabu = new ConcurrentLinkedQueue<>();
-        Vector<Vector<Integer>> memoriaLargoPlazo = new Vector<>();
-        
-        mejorSolucion = currentSolution;
+//        List<List<FuzzySet>> solucion = null;
+        ConcurrentLinkedQueue<Integer> listaTabu = new ConcurrentLinkedQueue<>();
+        Vector<Integer> memoriaLargoPlazo = new Vector<>();
+
+        //Generamos una solucion inicial aleatoria
+        // IMPORTANTE: CLONAR INITIAL SOLUTION PARA QUE NO OCURRAN COSAS EXTRAÑAS.
+        List<List<FuzzySet>> solucion = problem.getFuzzySets();
+
+        //Usamos como mejor solucion y solucion actual la solucion generada
+        mejorSolucion = solucion;
         solucionActual = mejorSolucion;
 
         //Inicializamos el vector de marcados para la seleccion de vecinos
         Vector<Boolean> marcados = new Vector<>();
-        for (int i = 0; i < problem.getNumberOfLabels(); i++) {
+        for (int i = 0; i < 100; i++) {
             marcados.add(Boolean.FALSE);
         }
 
         //Calculamos el coste de la solucion que hemos generado
-        costeMejorSolucion = evaluate(problem.getFuzzySets(), currentPopulation, (EvaluatorIndDNF) problem.getEvaluator(), new WRAccNorm());
+        costeMejorSolucion = evaluate(solucion, currentPopulation, (EvaluatorIndDNF) problem.getEvaluator(), new WRAccNorm());
+
         costeSolucionActual = costeMejorSolucion;
 
-        for (int i = 0; i < 5; i++) {
-            listaTabu.offer(null);
+        //Iniciamos la lista tabu y la memoria a largo plazo
+        for (int i = 0; i < 20; i++) {
+            listaTabu.offer(-1);
         }
 
-        for (int i = 0; i < currentSolution.size(); i++) {
-            Vector<Integer> aux = new Vector<>();
-            for (int j = 0; j < 9; j++) {
-                aux.add(0);
-            }
-            memoriaLargoPlazo.add(aux);
+        for (int i = 0; i < 100; i++) {
+            memoriaLargoPlazo.add(0);
         }
 
         try {
@@ -110,30 +116,40 @@ public class BusquedaTabu {
             while (evaluacion < 5000) {
                 Integer numVecinos = 10;
 
-                //HAY QUE USAR SETNUMBEROFLABELS??
-                //Como buscar la que menos aporta?
                 //Obtenemos la posicion de menor aporte
-//                posicion = menorAporte(tamañoSolucion, matriz, solucionActual);
-                posicion = 0;
+                List<FuzzySet> anterior = null;
+                double costeNuevo = 0;
+                double costeAnterior = 0;
+                for (int i = 0; i < solucion.size(); i++) {
+                    anterior = solucion.get(i);
+                    solucion.remove(i);
+                    costeNuevo = evaluate(solucion, currentPopulation, (EvaluatorIndDNF) problem.getEvaluator(), new WRAccNorm());
+                    if (costeNuevo > costeAnterior) {
+                        posicion = i;
+                    }
+                    solucion.add(i, anterior);
+                }
                 //Limpiamos el vector de marcados para realizar la seleccion de vecinos
-                limpiarMarcados(marcados, currentSolution.size());
+                marcados.clear();
+                for (int i = 0; i < 100; i++) {
+                    marcados.add(Boolean.FALSE);
+                }
 
                 //GUardamos el elemento que vamos a sustituir
-                List<FuzzySet> elementoAnterior = currentSolution.get(posicion);
+                List<FuzzySet> elementoAnterior = solucion.get(posicion);
                 costeSolucionParcial = 0;
-                currentSolution.remove(posicion);
 
                 evaluacion++;
 
                 //Generamos y evaluamos los vecinos, obteniendo una nueva solucion con el mejor vecino
-                solucionActual = evaluarVecinos(10, marcados, solucionActual, costeSolucionActual, listaTabu, solucionParcial, costeSolucionParcial, elementoAnterior, posicion, currentPopulation);
+                solucionActual = evaluarVecinos(numVecinos, marcados, solucionActual, costeSolucionActual, listaTabu, solucionParcial, costeSolucionParcial, elementoAnterior, posicion, currentPopulation);
 
                 //Calculamos el coste de esta nueva solucion
-                costeSolucionActual = evaluate(problem.getFuzzySets(), currentPopulation, (EvaluatorIndDNF) problem.getEvaluator(), new WRAccNorm());
+                costeSolucionActual = evaluate(solucionActual, currentPopulation, (EvaluatorIndDNF) problem.getEvaluator(), new WRAccNorm());
 
                 //Actualizamos la lista tabu y la memoria a largo plazo
-                actualizarMemoriaLargoPlazo(memoriaLargoPlazo, solucionActual);
-                actualizarListaTabu(listaTabu, elementoAnterior);
+//                actualizarMemoriaLargoPlazo(memoriaLargoPlazo, solucionActual);
+//                actualizarListaTabu(listaTabu, elementoAnterior);
 
                 /*Si la solucion que hemos obtenido tiene un coste mejor 
                 que nuestra mejor solucion, la solucion actual la tomamos como mejor solucion.
@@ -176,9 +192,8 @@ public class BusquedaTabu {
         } catch (Exception e) {
             System.err.println("metaherísticas_pr_1.Algoritmos.BusquedaTabu(): excepcion capturada: " + e.toString() + ". Iteracion: " + evaluacion + ". Contador reinicializacion: " + contadorReinicializacion);
         }
-
         // Return
-        return currentSolution;
+        return solucion;
     }
 
     private void limpiarMarcados(Vector<Boolean> marcados, int tamaño) {
@@ -187,51 +202,49 @@ public class BusquedaTabu {
             marcados.add(Boolean.FALSE);
         }
     }
-    
+
     private void actualizarMemoriaLargoPlazo(Vector<Vector<Integer>> memoriaLargoPlazo, List<List<FuzzySet>> vector) {
         for (int i = 0; i < vector.size(); i++) {
             memoriaLargoPlazo.get(i).setElementAt(memoriaLargoPlazo.get(i).get(vector.get(i).size()) + 1, vector.get(i).size());
         }
     }
-    
+
     private void actualizarListaTabu(ConcurrentLinkedQueue<List<FuzzySet>> listaTabu, List<FuzzySet> elementoAnterior) {
         listaTabu.offer(elementoAnterior);
         listaTabu.remove();
     }
 
     private List<List<FuzzySet>> evaluarVecinos(Integer numVecinos, Vector<Boolean> marcados, List<List<FuzzySet>> solucionActual,
-            double costeSolucionActual, ConcurrentLinkedQueue<List<FuzzySet>> listaTabu,
-            List<List<FuzzySet>> solucionParcial, double costeSolucionParcial, List<FuzzySet> elementoAnterior, Integer posicion,
-            List<BinarySolution> currentPopulation) {
+            double costeSolucionActual, ConcurrentLinkedQueue<Integer> listaTabu,
+            List<List<FuzzySet>> solucionParcial, double costeSolucionParcial, List<FuzzySet> elementoAnterior, Integer posicion, List<BinarySolution> currentPopulation) {
         double costeF = 0.0;
-        List<FuzzySet> mejorVecino = null;
+        int mejorVecino = 0;
 
         //Generamos numVecinos
         while (numVecinos > 0) {
-            List<FuzzySet> vecino;
+            int vecino;
             do {
-                vecino = problem.generateLinguistcLabels(problem.getMinP(0), problem.getMaxP(0), 0);   //Generamos un vecino hasta que encontremos 
-            } while (solucionActual.contains(vecino));                 //uno que no este marcado como seleccionado
+                vecino = (int) (Math.random()*10 + 1);   //Generamos un vecino hasta que encontremos 
+            } while (marcados.get(vecino));                 //uno que no este marcado como seleccionado
 
-//            marcados.set(vecino, Boolean.TRUE); //Marcamos el que hemos generado
+            marcados.set(vecino, Boolean.TRUE); //Marcamos el que hemos generado
+
             //Si el vecino no esta en la solucion ni en la lista tabu
-            if (!solucionActual.contains(vecino)) {
-                if (!listaTabu.contains(vecino)) {
+            if (!listaTabu.contains(vecino)) {
 
-                    solucionActual.add(vecino);
-                    //Obtenemos el coste de sustituir el elemento
-                    costeF = evaluate(solucionActual, currentPopulation, (EvaluatorIndDNF) problem.getEvaluator(), new WRAccNorm());
+                //Obtenemos el coste de sustituir el elemento
+                List<List<FuzzySet>> solucionAux = solucionActual;
+                List<FuzzySet> listaNueva = problem.generateLinguistcLabels(0, 9, vecino);
+                solucionAux.set(posicion, listaNueva);
+                
+                costeF = evaluate(solucionAux, currentPopulation, (EvaluatorIndDNF) problem.getEvaluator(), new WRAccNorm());
+                numVecinos--;
 
-                    numVecinos--;
-
-                    //Si se mejora el coste con el nuevo vecino, guardamos la nueva solucion
-                    if (costeSolucionParcial < costeF) {
-                        mejorVecino = vecino;
-                        costeSolucionParcial = costeF;
-                        solucionParcial = solucionActual;
-                    }else{
-                        solucionActual.remove(vecino);
-                    }
+                //Si se mejora el coste con el nuevo vecino, guardamos la nueva solucion
+                if (costeSolucionParcial < costeF) {
+                    mejorVecino = vecino;
+                    costeSolucionParcial = costeF;
+                    solucionParcial = solucionAux;
                 }
             }
         }
@@ -268,7 +281,7 @@ public class BusquedaTabu {
         return currentPopulation.parallelStream()
                 .mapToDouble((BinarySolution individual) -> {
                     evaluator.doEvaluation(individual, solution, problem.getDataset());
-                    ContingencyTable table = (ContingencyTable) individual.getAttribute(TablaContingencia.class);
+                    ContingencyTable table = (ContingencyTable) individual.getAttribute(ContingencyTable.class);
                     return measure.calculateValue(table);
                 }).sum() / (double) currentPopulation.size();
 

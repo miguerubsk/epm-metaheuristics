@@ -414,6 +414,7 @@ public class Problema implements BinaryProblem {
      * @param min
      * @return
      */
+    
     private List<FuzzySet> generateLinguistcLabels(double min, double max) {
         double marca = (max - min) / ((double) (numLabels - 1));
         double cutPoint = min + marca / 2;

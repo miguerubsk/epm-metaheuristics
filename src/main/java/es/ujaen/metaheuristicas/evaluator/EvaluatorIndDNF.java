@@ -110,6 +110,7 @@ public class EvaluatorIndDNF extends Evaluator {
 
                 ContingencyTable table = new ContingencyTable(tp, fp, tn, fn);
                 ind.setAttribute(ContingencyTable.class, table);
+                individual.setAttribute(ContingencyTable.class, table);
                 ArrayList<QualityMeasure> measures = super.calculateMeasures(table);
                 for (int i = 0; i < measures.size(); i++) {
                     ind.setObjective(i, measures.get(i).getValue());
